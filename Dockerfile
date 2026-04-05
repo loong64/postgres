@@ -58,6 +58,7 @@ RUN set -ex; \
 			tempDir="$(mktemp -d)"; \
 			cd "$tempDir"; \
 			\
+			apt-get update; \
 # build .deb files from upstream's source packages (which are verified by apt-get)
 			nproc="$(nproc)"; \
 			export DEB_BUILD_OPTIONS="nocheck parallel=$nproc"; \

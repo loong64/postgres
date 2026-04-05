@@ -1,0 +1,33 @@
+name: GitHub CI
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: 0 20 * * *
+
+jobs:
+  generate-jobs:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Install dependencies
+        run: |
+          sudo wget -q -O /usr/local/bin/bashbrew https://github.com/docker-library/bashbrew/releases/latest/download/bashbrew-amd64
+          sudo chmod +x /usr/local/bin/bashbrew
+          sudo chown root:root /usr/local/bin/bashbrew
+
+      - name: Check for changes
+        id: set-matrix
+        run: |
+          commit_message="build(app): bump app to latest"
+          chmod +x *.sh
+          ./update.sh
+
+          git status
+          git config --global user.name "${GITHUB_ACTOR}"
+          git config --global user.email "${GITHUB_ACTOR}@users.noreply.github.com"
+          git commit -am "${commit_message}" || exit 0
+          git push origin HEAD:main
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -1,4 +1,10 @@
-FROM ghcr.io/loong64/debian:trixie-slim
+#
+# NOTE: THIS DOCKERFILE IS GENERATED VIA "apply-templates.sh"
+#
+# PLEASE DO NOT EDIT IT DIRECTLY.
+#
+
+FROM ghcr.io/loong64/debian:trixie AS builder
 
 RUN set -ex; \
 	apt-get update; \
@@ -33,41 +39,23 @@ RUN set -ex; \
 	rm -rf "$GNUPGHOME"
 
 ENV PG_MAJOR 14
-ENV PATH $PATH:/usr/lib/postgresql/$PG_MAJOR/bin
-
 ENV PG_VERSION 14.22-1.pgdg13+1
 
 RUN set -ex; \
-	\
-# see note below about "*.pyc" files
 	export PYTHONDONTWRITEBYTECODE=1; \
-	\
 	dpkgArch="$(dpkg --print-architecture)"; \
 	aptRepo="[ signed-by=/usr/local/share/keyrings/postgres.gpg.asc ] http://apt.postgresql.org/pub/repos/apt trixie-pgdg main $PG_MAJOR"; \
-	case "$dpkgArch" in \
-		amd64 | arm64 | ppc64el) \
-# arches officialy built by upstream
-			echo "deb $aptRepo" > /etc/apt/sources.list.d/pgdg.list; \
-			apt-get update; \
-			;; \
-		*) \
-# we're on an architecture upstream doesn't officially build for
-# let's build binaries from their published source packages
-			echo "deb-src $aptRepo" > /etc/apt/sources.list.d/pgdg.list; \
-			\
-			tempDir="$(mktemp -d)"; \
-			cd "$tempDir"; \
-			\
-			apt-get update; \
-# build .deb files from upstream's source packages (which are verified by apt-get)
-			nproc="$(nproc)"; \
-			export DEB_BUILD_OPTIONS="nocheck parallel=$nproc"; \
-			apt-get build-dep -y "postgresql-$PG_MAJOR=$PG_VERSION"; \
-			apt-get source --compile "postgresql-$PG_MAJOR=$PG_VERSION"; \
-			find . -maxdepth 1 -mindepth 1 -type d -exec rm -rf {} +; \
-			\
-			cd /; \
-			mv "$tempDir" /data; \
-			ls -lAFh; \
-			;; \
-	esac
+	echo "deb-src $aptRepo" > /etc/apt/sources.list.d/pgdg.list; \
+	apt-get update; \
+	tempDir="$(mktemp -d)"; \
+	cd "$tempDir"; \
+	nproc="$(nproc)"; \
+	export DEB_BUILD_OPTIONS="nocheck parallel=$nproc"; \
+	apt-get build-dep -y "postgresql-$PG_MAJOR=$PG_VERSION"; \
+	apt-get source --compile "postgresql-$PG_MAJOR=$PG_VERSION"; \
+	find . -maxdepth 1 -mindepth 1 -type d -exec rm -rf {} +; \
+	cd /; \
+	mv "$tempDir" /dist
+
+FROM scratch
+COPY --from=builder /dist /dist

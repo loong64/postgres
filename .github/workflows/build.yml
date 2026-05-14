@@ -50,7 +50,7 @@ jobs:
           echo "version=${{ matrix.version }}" >> $GITHUB_ENV
           echo "full_version=${full_version}" >> $GITHUB_ENV
 
-          gh release view ${full_version} -R ${{ github.repository }} | grep postgresql-${version}_${full_version}.orig.tar.bz2 >/dev/null 2>&1 || echo "build=false" >> $GITHUB_ENV
+          gh release view ${full_version} -R ${{ github.repository }} | grep postgresql-${version}_${full_version}.orig.tar.bz2 >/dev/null 2>&1 || echo "build=true" >> $GITHUB_ENV
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 

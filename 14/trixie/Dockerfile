@@ -39,7 +39,7 @@ RUN set -ex; \
 	rm -rf "$GNUPGHOME"
 
 ENV PG_MAJOR 14
-ENV PG_VERSION 14.22-1.pgdg13+1
+ENV PG_VERSION 14.23-1.pgdg13+1
 
 RUN set -ex; \
 	export PYTHONDONTWRITEBYTECODE=1; \

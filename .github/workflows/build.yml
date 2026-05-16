@@ -38,11 +38,6 @@ jobs:
 
       - name: Check
         run: |
-          echo "build=true" >> $GITHUB_ENV
-          if [ ! -f "${{ matrix.version }}/${{ matrix.suite }}/Dockerfile" ]; then
-            echo "build=false" >> $GITHUB_ENV
-            exit 0
-          fi
           full_version=$(grep -m1 -oP "ENV PG_VERSION \K.*" ${{ matrix.version }}/${{ matrix.suite }}/Dockerfile | cut -d'-' -f1)
           ## Handle version format:
           # 18~beta1 --> 18.0beta1
@@ -50,7 +45,7 @@ jobs:
           echo "version=${{ matrix.version }}" >> $GITHUB_ENV
           echo "full_version=${full_version}" >> $GITHUB_ENV
 
-          gh release view ${full_version} -R ${{ github.repository }} | grep postgresql-${version}_${full_version}.orig.tar.bz2 >/dev/null 2>&1 || echo "build=true" >> $GITHUB_ENV
+          gh release view ${full_version} -R ${{ github.repository }} || echo "build=true" >> $GITHUB_ENV
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
